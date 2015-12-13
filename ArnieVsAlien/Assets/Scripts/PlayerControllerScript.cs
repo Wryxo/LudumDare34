@@ -10,13 +10,19 @@ public class PlayerControllerScript : MonoBehaviour {
     public GameObject Projectile;
 
     private Rigidbody2D rb;
+    private GameControllerScript gc;
     private float currentCD;
     private bool fireLeft;
     private bool fireRight;
+    public int ammoLeft;
+    public int ammoRight;
 
     // Use this for initialization
     void Start () {
         rb = GetComponent<Rigidbody2D>();
+        gc = GameObject.FindGameObjectWithTag("GameController").GetComponent<GameControllerScript>();
+        ammoLeft = 5;
+        ammoRight = 5;
     }
 
     void Update()
@@ -32,15 +38,17 @@ public class PlayerControllerScript : MonoBehaviour {
         if (currentCD <= 0)
         {
             currentCD = 0;
-            if (fireLeft)
+            if (fireLeft && ammoLeft > 0)
             {
                 Shoot(true);
                 fireLeft = false;
+                ammoLeft--;
                 currentCD = GunCD;
-            } else if (fireRight)
+            } else if (fireRight && ammoRight > 0)
             {
                 Shoot(false);
                 fireRight = false;
+                ammoRight--;
                 currentCD = GunCD;
             }
         }
@@ -71,5 +79,20 @@ public class PlayerControllerScript : MonoBehaviour {
         go.GetComponent<SpriteRenderer>().sprite = which ? LeftFireSprite : RightFireSprite;
         go.GetComponent<ProjectileScript>().Attunement = which ? false : true;
         go.GetComponent<ProjectileScript>().Direction = transform.up;
+    }
+
+    void OnCollisionEnter2D(Collision2D other)
+    {
+        Debug.Log("Collision" + other.gameObject.tag);
+        if (other.gameObject.tag == "Cell")
+            gc.Defeat();
+        if (other.gameObject.tag == "Ammo0") { 
+            ammoLeft += 5;
+            Destroy(other.gameObject);
+        }
+        if (other.gameObject.tag == "Ammo1") { 
+            ammoRight += 5;
+            Destroy(other.gameObject);
+        }
     }
 }

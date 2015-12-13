@@ -36,14 +36,14 @@ public class AlienCellScript : MonoBehaviour {
                 Attunement = true;
             }
             GetComponent<SpriteRenderer>().sprite = CellSprite;
-            GetComponent<BoxCollider2D>().enabled = true;
+            //GetComponent<BoxCollider2D>().enabled = true;
             transform.Find("Attunement").GetComponent<SpriteRenderer>().sprite = Attunement ? OneSprite : ZeroSprite;
             transform.Find("Attunement").GetComponent<SpriteRenderer>().color = new Color(255, 0, 0, 255);
         }
         else
         {
             GetComponent<SpriteRenderer>().sprite = CoreSprite;
-            GetComponent<BoxCollider2D>().enabled = false;
+            //GetComponent<BoxCollider2D>().enabled = false;
             transform.Find("Attunement").GetComponent<SpriteRenderer>().sprite = null;
             transform.Find("Attunement").GetComponent<SpriteRenderer>().color = new Color(255, 255, 255, 0);
         }

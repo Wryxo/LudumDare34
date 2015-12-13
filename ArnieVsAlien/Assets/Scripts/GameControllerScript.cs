@@ -1,13 +1,14 @@
 ﻿using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using UnityEngine.SceneManagement;
 
 public class GameControllerScript : MonoBehaviour
 {
 
-    public GameObject Cell;
-    public float MitosisCD;
-    public float currentCD;
+    public GameObject Cell, Ammo0, Ammo1;
+    public float MitosisCD, currentCDMitosis;
+    public float AmmoCD, currectCDAmmo;
 
     public int numCores;
     private int vertExtent, horzExtent;
@@ -31,7 +32,7 @@ public class GameControllerScript : MonoBehaviour
         }
         maxCore = 3;
         maxCell = 1;
-        for (int i = 0; i < 3; i++)
+        for (int i = 0; i < 4; i++)
         {
             int x = Random.Range(0, horzExtent);
             int y = Random.Range(0, vertExtent);
@@ -39,14 +40,16 @@ public class GameControllerScript : MonoBehaviour
             map[x][y].SetCore(true);
             Mitosis(x, y);
         }
-        currentCD = MitosisCD / 2;
+        currentCDMitosis = MitosisCD / 2;
+        currectCDAmmo = AmmoCD / 2;
     }
 
     // Update is called once per frame
     void Update()
     {
-        currentCD -= Time.deltaTime;
-        if (currentCD <= 0)
+        currectCDAmmo -= Time.deltaTime;
+        currentCDMitosis -= Time.deltaTime;
+        if (currentCDMitosis <= 0)
         {
             numCores = 0;
             for (int i = 0; i < horzExtent; i++)
@@ -69,13 +72,41 @@ public class GameControllerScript : MonoBehaviour
                 }
             }
             if (numCores == 0) Victory();
-            currentCD = MitosisCD;
+            currentCDMitosis = MitosisCD;
+        }
+        if (currectCDAmmo <= 0)
+        {
+            int x = Random.Range(0, horzExtent);
+            int y = Random.Range(0, vertExtent);
+            SpawnAmmo(x, y, true);
+            x = Random.Range(0, horzExtent);
+            y = Random.Range(0, vertExtent);
+            SpawnAmmo(x, y, false);
+            currectCDAmmo = AmmoCD;
         }
     }
 
     void Victory()
     {
         Debug.Log("VICTORY!");
+    }
+
+    public void Defeat()
+    {
+        Debug.Log("DEFEAT!");
+        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+    }
+
+    void SpawnAmmo(int x, int y, bool type)
+    {
+        if (type)
+        {
+            var go = Instantiate(Ammo0, new Vector3(-19 + x * 2, -14 + y * 2, 0), Quaternion.identity) as GameObject;
+        }
+        else
+        {
+            var go = Instantiate(Ammo1, new Vector3(-19 + x * 2, -14 + y * 2, 0), Quaternion.identity) as GameObject;
+        }
     }
 
     bool SpawnAlien(int x, int y)
@@ -243,22 +274,5 @@ public class GameControllerScript : MonoBehaviour
         }
         //if (map[x + 1][y] != null) if (CheckCore(x + 1, y)) return true;
         return false;
-    }
-}
-
-public class Pair
-{
-    int x;
-    int y;
-
-    public Pair (int x, int y)
-    {
-        this.x = x;
-        this.y = y;
-    }
-
-    public override string ToString()
-    {
-        return x + " " + y;
     }
 }
