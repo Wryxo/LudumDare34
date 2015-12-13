@@ -7,27 +7,29 @@ using UnityEngine.UI;
 public class GameControllerScript : MonoBehaviour
 {
 
-    public GameObject Cell, Ammo0, Ammo1, VictoryGO, DefeatGO;
+    public GameObject Cell, Ammo0, Ammo1, Arnie, VictoryGO, DefeatGO, GameMenu, GameUI, BackButton;
     public float MitosisCD, currentCDMitosis;
     public float AmmoCD, currectCDAmmo;
-    public AudioClip[] MusicClips;
+    public int CoreValue, CellValue;
 
     public int numCores;
+
+    private long score;
     private int vertExtent, horzExtent;
     private AlienCellScript[][] map;
     private short[][] bfsMap;
     private int maxCore, maxCell;
     private Slider MitosisCDSlider;
-    private AudioSource music, slime;
+    private Text scoreText;
+    private AudioSource slime;
 
     // Use this for initialization
     void Start()
     {
         slime = transform.Find("SlimeAudio").GetComponent<AudioSource>();
-        music = GetComponent<AudioSource>();
-        music.clip = MusicClips[Random.Range(0, 7)];
-        music.Play();
         MitosisCDSlider = GameObject.Find("MitosisCDSlider").GetComponent<Slider>();
+        scoreText = GameObject.Find("ScoreText").GetComponent<Text>();
+        score = 0;
         vertExtent = (int)Camera.main.orthographicSize;
         horzExtent = vertExtent * Screen.width / Screen.height;
         vertExtent -= 2;
@@ -40,23 +42,26 @@ public class GameControllerScript : MonoBehaviour
                 map[i][j] = null;
             }
         }
-        maxCore = 5;
-        maxCell = 2;
+        maxCore = 4;
+        maxCell = 1;
         for (int i = 0; i < 4; i++)
         {
             int x = Random.Range(0, horzExtent);
             int y = Random.Range(0, vertExtent);
             SpawnAlien(x, y, 0, 0);
             map[x][y].SetCore(true);
+            numCores++;
             Mitosis(x, y);
         }
         currentCDMitosis = MitosisCD;
         currectCDAmmo = AmmoCD / 2;
+        Instantiate(Arnie);
     }
 
     // Update is called once per frame
     void Update()
     {
+        scoreText.text = score.ToString();
         currectCDAmmo -= Time.deltaTime;
         currentCDMitosis -= Time.deltaTime;
         MitosisCDSlider.normalizedValue = currentCDMitosis / MitosisCD;
@@ -98,14 +103,66 @@ public class GameControllerScript : MonoBehaviour
         }
     }
 
+    public void IncreaseScore(bool core)
+    {
+        Debug.Log("score " + numCores);
+        score += (core ? CoreValue : CellValue) * numCores;
+    }
+
+    public void ShowGameMenu(bool end)
+    {
+        if (end)
+        {
+            BackButton.GetComponent<Button>().interactable = false;
+        } else
+        {
+            BackButton.GetComponent<Button>().interactable = true;
+        }
+        GameMenu.SetActive(true);
+        //GameUI.SetActive(false);
+        PauseGame(true);
+    }
+
+    public void HideGameMenu()
+    {
+        GameMenu.SetActive(false);
+        //GameUI.SetActive(true);
+        PauseGame(false);
+    }
+
+    public void RestartLevel()
+    {
+        Time.timeScale = 1.0f;
+        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+    }
+
+    public void GoToMainMenu()
+    {
+        Time.timeScale = 1.0f;
+        SceneManager.LoadScene("Menu");
+    }
+
+    void PauseGame(bool pause)
+    {
+        if (pause)
+        {
+            Time.timeScale = 0.0f;
+        } else
+        {
+            Time.timeScale = 1.0f;
+        }
+    }
+
     void Victory()
     {
         VictoryGO.SetActive(true);
+        ShowGameMenu(true);
     }
 
     public void Defeat()
     {
         DefeatGO.SetActive(true);
+        ShowGameMenu(true);
     }
 
     void SpawnAmmo(int x, int y, bool type)
@@ -127,7 +184,7 @@ public class GameControllerScript : MonoBehaviour
             var go = Instantiate(Cell, new Vector3(-19 + x * 2, -14 + y * 2, 0), Quaternion.identity) as GameObject;
             map[x][y] = go.GetComponent<AlienCellScript>();
             map[x][y].SetCoord(x, y);
-            if (Random.value > 0.9)
+            if (Random.value > 0.95)
             {
                 map[x][y].SetCore(true);
             }

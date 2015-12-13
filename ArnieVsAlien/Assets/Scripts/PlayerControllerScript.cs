@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using UnityEngine.SceneManagement;
 
 public class PlayerControllerScript : MonoBehaviour {
     public float Acceleration, MaxSpeed, RotateSpeed;
@@ -30,6 +31,10 @@ public class PlayerControllerScript : MonoBehaviour {
 
     void Update()
     {
+        if (Input.GetButton("Cancel"))
+        {
+            gc.ShowGameMenu(false);
+        }
         if (Input.GetButtonDown("Fire1"))
         {
             fireLeft = true;

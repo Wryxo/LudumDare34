@@ -62,6 +62,7 @@ public class AlienCellScript : MonoBehaviour {
         mitosisCount--;
         if (mitosisCount <= 0)
         {
+            gc.IncreaseScore(true);
             gc.DestroyAlien(x, y);
             Destroy(gameObject);
         }
@@ -72,6 +73,7 @@ public class AlienCellScript : MonoBehaviour {
         if (other.tag == "Projectile" && !IsCore)
         {
             if (other.GetComponent<ProjectileScript>().Attunement != Attunement) {
+                gc.IncreaseScore(false);
                 gc.DestroyAlien(x, y);
                 Destroy(gameObject);
             } else
