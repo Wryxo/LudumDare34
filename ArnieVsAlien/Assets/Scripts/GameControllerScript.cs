@@ -2,25 +2,35 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 public class GameControllerScript : MonoBehaviour
 {
 
-    public GameObject Cell, Ammo0, Ammo1;
+    public GameObject Cell, Ammo0, Ammo1, VictoryGO, DefeatGO;
     public float MitosisCD, currentCDMitosis;
     public float AmmoCD, currectCDAmmo;
+    public AudioClip[] MusicClips;
 
     public int numCores;
     private int vertExtent, horzExtent;
     private AlienCellScript[][] map;
     private short[][] bfsMap;
     private int maxCore, maxCell;
+    private Slider MitosisCDSlider;
+    private AudioSource music, slime;
 
     // Use this for initialization
     void Start()
     {
+        slime = transform.Find("SlimeAudio").GetComponent<AudioSource>();
+        music = GetComponent<AudioSource>();
+        music.clip = MusicClips[Random.Range(0, 7)];
+        music.Play();
+        MitosisCDSlider = GameObject.Find("MitosisCDSlider").GetComponent<Slider>();
         vertExtent = (int)Camera.main.orthographicSize;
         horzExtent = vertExtent * Screen.width / Screen.height;
+        vertExtent -= 2;
         map = new AlienCellScript[horzExtent][];
         for (int i = 0; i < horzExtent; i++)
         {
@@ -30,8 +40,8 @@ public class GameControllerScript : MonoBehaviour
                 map[i][j] = null;
             }
         }
-        maxCore = 3;
-        maxCell = 1;
+        maxCore = 5;
+        maxCell = 2;
         for (int i = 0; i < 4; i++)
         {
             int x = Random.Range(0, horzExtent);
@@ -49,8 +59,10 @@ public class GameControllerScript : MonoBehaviour
     {
         currectCDAmmo -= Time.deltaTime;
         currentCDMitosis -= Time.deltaTime;
+        MitosisCDSlider.normalizedValue = currentCDMitosis / MitosisCD;
         if (currentCDMitosis <= 0)
         {
+            if (!slime.isPlaying) slime.Play();
             numCores = 0;
             for (int i = 0; i < horzExtent; i++)
             {
@@ -88,13 +100,12 @@ public class GameControllerScript : MonoBehaviour
 
     void Victory()
     {
-        Debug.Log("VICTORY!");
+        VictoryGO.SetActive(true);
     }
 
     public void Defeat()
     {
-        Debug.Log("DEFEAT!");
-        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+        DefeatGO.SetActive(true);
     }
 
     void SpawnAmmo(int x, int y, bool type)
@@ -143,6 +154,7 @@ public class GameControllerScript : MonoBehaviour
         }
         if (map[x][y].IsCore)
         {
+            map[x][y].UsedMitosis();
             for (int i = 0; i < maxCore; i++)
             {
                 int offx = Random.Range(-1, 2);

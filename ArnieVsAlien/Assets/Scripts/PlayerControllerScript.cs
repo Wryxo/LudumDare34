@@ -7,10 +7,12 @@ public class PlayerControllerScript : MonoBehaviour {
 
     public Sprite LeftFireSprite;
     public Sprite RightFireSprite;
+    public GameObject Blood;
     public GameObject Projectile;
 
     private Rigidbody2D rb;
     private GameControllerScript gc;
+    private AudioSource shot;
     private float currentCD;
     private bool fireLeft;
     private bool fireRight;
@@ -20,6 +22,7 @@ public class PlayerControllerScript : MonoBehaviour {
     // Use this for initialization
     void Start () {
         rb = GetComponent<Rigidbody2D>();
+        shot = GetComponent<AudioSource>();
         gc = GameObject.FindGameObjectWithTag("GameController").GetComponent<GameControllerScript>();
         ammoLeft = 5000;
         ammoRight = 5000;
@@ -40,12 +43,14 @@ public class PlayerControllerScript : MonoBehaviour {
             currentCD = 0;
             if (fireLeft && ammoLeft > 0)
             {
+                shot.Play();
                 Shoot(true);
                 fireLeft = false;
                 ammoLeft--;
                 currentCD = GunCD;
             } else if (fireRight && ammoRight > 0)
             {
+                shot.Play();
                 Shoot(false);
                 fireRight = false;
                 ammoRight--;
@@ -83,9 +88,12 @@ public class PlayerControllerScript : MonoBehaviour {
 
     void OnCollisionEnter2D(Collision2D other)
     {
-        if (other.gameObject.tag == "Cell")
+        if (other.gameObject.tag == "Cell") { 
             gc.Defeat();
-        
+            Instantiate(Blood, transform.position, transform.rotation);
+            Destroy(gameObject);
+        }
+
     }
 
     void OnTriggerEnter2D(Collider2D other)

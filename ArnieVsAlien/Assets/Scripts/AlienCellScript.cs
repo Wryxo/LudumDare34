@@ -7,7 +7,7 @@ public class AlienCellScript : MonoBehaviour {
     public Sprite OneSprite, ZeroSprite, CoreSprite, CellSprite, CoreVeinSprite, CellVeinSprite;
     public RuntimeAnimatorController CellVeinAnimator, CoreVeinAnimator;
 
-    private int x, y;
+    private int x, y, mitosisCount;
     private GameControllerScript gc;
 
 	// Use this for initialization
@@ -47,6 +47,7 @@ public class AlienCellScript : MonoBehaviour {
         else
         {
             GetComponent<Animator>().enabled = false;
+            mitosisCount = 3;
             GetComponent<SpriteRenderer>().sprite = CoreSprite;
             //GetComponent<BoxCollider2D>().enabled = false;
             transform.Find("Attunement").GetComponent<SpriteRenderer>().sprite = null;
@@ -56,13 +57,26 @@ public class AlienCellScript : MonoBehaviour {
         }
     }
 
-    void OnTriggerEnter2D(Collider2D other)
+    public void UsedMitosis()
+    {
+        mitosisCount--;
+        if (mitosisCount <= 0)
+        {
+            gc.DestroyAlien(x, y);
+            Destroy(gameObject);
+        }
+    }
+
+        void OnTriggerEnter2D(Collider2D other)
     {
         if (other.tag == "Projectile" && !IsCore)
         {
             if (other.GetComponent<ProjectileScript>().Attunement != Attunement) {
                 gc.DestroyAlien(x, y);
                 Destroy(gameObject);
+            } else
+            {
+                SetCore(true);
             }
         }
     }
