@@ -36,11 +36,11 @@ public class GameControllerScript : MonoBehaviour
         {
             int x = Random.Range(0, horzExtent);
             int y = Random.Range(0, vertExtent);
-            SpawnAlien(x, y);
+            SpawnAlien(x, y, 0, 0);
             map[x][y].SetCore(true);
             Mitosis(x, y);
         }
-        currentCDMitosis = MitosisCD / 2;
+        currentCDMitosis = MitosisCD;
         currectCDAmmo = AmmoCD / 2;
     }
 
@@ -101,15 +101,15 @@ public class GameControllerScript : MonoBehaviour
     {
         if (type)
         {
-            var go = Instantiate(Ammo0, new Vector3(-19 + x * 2, -14 + y * 2, 0), Quaternion.identity) as GameObject;
+            Instantiate(Ammo0, new Vector3(-19 + x * 2, -14 + y * 2, 0), Quaternion.identity);
         }
         else
         {
-            var go = Instantiate(Ammo1, new Vector3(-19 + x * 2, -14 + y * 2, 0), Quaternion.identity) as GameObject;
+            Instantiate(Ammo1, new Vector3(-19 + x * 2, -14 + y * 2, 0), Quaternion.identity);
         }
     }
 
-    bool SpawnAlien(int x, int y)
+    bool SpawnAlien(int x, int y, int ox, int oy)
     {
         if (x >= 0 && x < horzExtent && y >= 0 && y < vertExtent && map[x][y] == null)
         {
@@ -150,7 +150,7 @@ public class GameControllerScript : MonoBehaviour
                 if (x+offx < 0 || x+offx >= horzExtent || y+offy < 0 || y+offy >= vertExtent) continue;
                 if (map[x+offx][y+offy] == null)
                 {
-                    if (SpawnAlien(x + offx, y + offy))
+                    if (SpawnAlien(x + offx, y + offy, offx, offy))
                     {
                         numAdj++;
                     }
@@ -166,7 +166,7 @@ public class GameControllerScript : MonoBehaviour
                 if (x+offx < 0 || x+offx >= horzExtent || y+offy < 0 || y+offy >= vertExtent) continue;
                 if (map[x + offx][y + offy] == null)
                 {
-                    if (SpawnAlien(x+offx, y+offy))
+                    if (SpawnAlien(x + offx, y + offy, offx, offy))
                     {
                         numAdj++;
                     }
@@ -262,7 +262,7 @@ public class GameControllerScript : MonoBehaviour
             {
                 if (i == x && j == y) continue;
                 if (i < 0 || i >= horzExtent || j < 0 || j >= vertExtent) continue;
-                if (map[i][j] != null && bfsMap[i][j] == 0)
+                if (map[i][j] != null)
                 {
                     if (CheckCore(i, j))
                     {

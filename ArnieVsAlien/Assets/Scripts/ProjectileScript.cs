@@ -19,7 +19,7 @@ public class ProjectileScript : MonoBehaviour {
 
     void OnTriggerEnter2D(Collider2D other)
     {
-        if (other.tag != "Finish" && other.tag != "Player") { 
+        if (other.tag != "Finish" && other.tag != "Player" && !other.tag.Contains("Ammo")) { 
             Destroy(gameObject);
         }
     }

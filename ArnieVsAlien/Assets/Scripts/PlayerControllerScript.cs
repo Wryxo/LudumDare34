@@ -21,8 +21,8 @@ public class PlayerControllerScript : MonoBehaviour {
     void Start () {
         rb = GetComponent<Rigidbody2D>();
         gc = GameObject.FindGameObjectWithTag("GameController").GetComponent<GameControllerScript>();
-        ammoLeft = 5;
-        ammoRight = 5;
+        ammoLeft = 5000;
+        ammoRight = 5000;
     }
 
     void Update()
@@ -83,14 +83,20 @@ public class PlayerControllerScript : MonoBehaviour {
 
     void OnCollisionEnter2D(Collision2D other)
     {
-        Debug.Log("Collision" + other.gameObject.tag);
         if (other.gameObject.tag == "Cell")
             gc.Defeat();
-        if (other.gameObject.tag == "Ammo0") { 
+        
+    }
+
+    void OnTriggerEnter2D(Collider2D other)
+    {
+        if (other.tag == "Ammo0")
+        {
             ammoLeft += 5;
             Destroy(other.gameObject);
         }
-        if (other.gameObject.tag == "Ammo1") { 
+        if (other.tag == "Ammo1")
+        {
             ammoRight += 5;
             Destroy(other.gameObject);
         }
