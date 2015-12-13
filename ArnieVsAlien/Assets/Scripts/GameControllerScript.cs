@@ -139,6 +139,7 @@ public class GameControllerScript : MonoBehaviour
     public void GoToMainMenu()
     {
         Time.timeScale = 1.0f;
+        Destroy(GameObject.Find("DJ"));
         SceneManager.LoadScene("Menu");
     }
 
@@ -169,11 +170,11 @@ public class GameControllerScript : MonoBehaviour
     {
         if (type)
         {
-            Instantiate(Ammo0, new Vector3(-19 + x * 2, -14 + y * 2, 0), Quaternion.identity);
+            Instantiate(Ammo0, new Vector3(-horzExtent+1 + x * 2, -vertExtent-1 + y * 2, 0), Quaternion.identity);
         }
         else
         {
-            Instantiate(Ammo1, new Vector3(-19 + x * 2, -14 + y * 2, 0), Quaternion.identity);
+            Instantiate(Ammo1, new Vector3(-horzExtent+1 + x * 2, -vertExtent-1 + y * 2, 0), Quaternion.identity);
         }
     }
 
@@ -181,10 +182,10 @@ public class GameControllerScript : MonoBehaviour
     {
         if (x >= 0 && x < horzExtent && y >= 0 && y < vertExtent && map[x][y] == null)
         {
-            var go = Instantiate(Cell, new Vector3(-19 + x * 2, -14 + y * 2, 0), Quaternion.identity) as GameObject;
+            var go = Instantiate(Cell, new Vector3(-horzExtent+1 + x * 2, -vertExtent-1 + y * 2, 0), Quaternion.identity) as GameObject;
             map[x][y] = go.GetComponent<AlienCellScript>();
             map[x][y].SetCoord(x, y);
-            if (Random.value > 0.95)
+            if (Random.value > 0.9)
             {
                 map[x][y].SetCore(true);
             }
