@@ -4,11 +4,14 @@ using UnityEngine.SceneManagement;
 
 public class MainMenuScript : MonoBehaviour {
 
-    public GameObject MainMenu, Help;
+    public GameObject MainMenu, Help, GameController;
 
-	// Use this for initialization
-	void Start () {
-	
+    // Use this for initialization
+    void Start () {
+        if (GameControllerScript.Instance == null)
+        {
+            Instantiate(GameController);
+        }
 	}
 	
 	// Update is called once per frame
