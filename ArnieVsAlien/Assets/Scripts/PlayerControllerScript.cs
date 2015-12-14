@@ -85,7 +85,7 @@ public class PlayerControllerScript : MonoBehaviour {
 
     void Shoot(bool which)
     {
-        var go = Instantiate(Projectile, transform.position, transform.rotation) as GameObject;
+        var go = Instantiate(Projectile, transform.position + (which ? -transform.right : transform.right)*0.7f, transform.rotation) as GameObject;
         go.GetComponent<SpriteRenderer>().sprite = which ? LeftFireSprite : RightFireSprite;
         go.GetComponent<ProjectileScript>().Attunement = which ? false : true;
         go.GetComponent<ProjectileScript>().Direction = transform.up;
