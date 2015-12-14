@@ -6,11 +6,19 @@ using UnityEngine.UI;
 
 public class GameControllerScript : MonoBehaviour
 {
+    public static GameControllerScript Instance = null;
 
-    public GameObject Cell, Ammo0, Ammo1, Arnie, VictoryGO, DefeatGO, GameMenu, GameUI, BackButton;
-    public float MitosisCD, currentCDMitosis;
-    public float AmmoCD, currectCDAmmo;
+    public GameObject Cell, Arnie, VictoryGO, DefeatGO, GameMenu, GameUI;
+    public GameObject[] Tiles;
+    public float currentCDMitosis;
     public int CoreValue, CellValue;
+
+    public int Multipliers0 { get { return controls ? 1 : 2; } set { controls = value == 1 ? true : false;} }
+    public int Multipliers1 { get { return 20 - mitosisCD; }  set { mitosisCD = value; } }
+    public int Multipliers2 { get { return maxCore; } set { maxCore = value; } }
+    public int Multipliers3 { get { return maxCell; } set { maxCell = value; } }
+    private bool controls;
+    private int maxCore, maxCell, multiplier, mitosisCD;
 
     public int numCores;
 
@@ -18,53 +26,98 @@ public class GameControllerScript : MonoBehaviour
     private int vertExtent, horzExtent;
     private AlienCellScript[][] map;
     private short[][] bfsMap;
-    private int maxCore, maxCell;
     private Slider MitosisCDSlider;
     private Text scoreText;
     private AudioSource slime;
+    private GameObject ui;
+    private bool menu;
+    private bool menuInited;
+
+    void Awake()
+    {
+        //Check if instance already exists
+        if (Instance == null)
+
+            //if not, set instance to this
+            Instance = this;
+
+        //If instance already exists and it's not this:
+        else if (Instance != this)
+
+            //Then destroy this. This enforces our singleton pattern, meaning there can only ever be one instance of a GameManager.
+            Destroy(gameObject);
+
+        //Sets this to not be destroyed when reloading scene
+        DontDestroyOnLoad(gameObject);
+        menu = true;
+        InitMenu();
+        menuInited = true;
+    }
 
     // Use this for initialization
-    void Start()
+    void OnLevelWasLoaded(int level)
     {
+        switch(level)
+        {
+            case 0:
+                menu = true;
+                if (!menuInited) InitMenu();
+                break;
+            case 1:
+                menu = false;
+                InitGame();
+                break;
+        }
+
+    }
+
+    void InitGame()
+    {
+        ui = GameObject.Find("UI");
+        var go = Instantiate(GameUI) as GameObject;
+        go.transform.SetParent(ui.transform, false);
+
         slime = transform.Find("SlimeAudio").GetComponent<AudioSource>();
         MitosisCDSlider = GameObject.Find("MitosisCDSlider").GetComponent<Slider>();
         scoreText = GameObject.Find("ScoreText").GetComponent<Text>();
-        score = 0;
+
         vertExtent = (int)Camera.main.orthographicSize;
         horzExtent = vertExtent * Screen.width / Screen.height;
         vertExtent -= 2;
-        map = new AlienCellScript[horzExtent][];
-        for (int i = 0; i < horzExtent; i++)
-        {
-            map[i] = new AlienCellScript[vertExtent];
-            for (int j = 0; j < vertExtent; j++)
-            {
-                map[i][j] = null;
-            }
-        }
-        maxCore = 4;
-        maxCell = 1;
-        for (int i = 0; i < 4; i++)
-        {
-            int x = Random.Range(0, horzExtent);
-            int y = Random.Range(0, vertExtent);
-            SpawnAlien(x, y, 0, 0);
-            map[x][y].SetCore(true);
-            numCores++;
-            Mitosis(x, y);
-        }
-        currentCDMitosis = MitosisCD;
-        currectCDAmmo = AmmoCD / 2;
-        Instantiate(Arnie);
+        score = 0;
+        multiplier = Multipliers0 + Multipliers1 + Multipliers2 + Multipliers3;
+
+        GenerateBackground();
+        GenerateMap();
+        go = Instantiate(Arnie) as GameObject;
+        go.GetComponent<PlayerControllerScript>().Controls = controls;
+
+        currentCDMitosis = mitosisCD;
+    }
+
+    void InitMenu()
+    {
+        Multipliers0 = 2;
+        Multipliers1 = 12;
+        Multipliers2 = 3;
+        Multipliers3 = 1;
+        multiplier = Multipliers0 + Multipliers1 + Multipliers2 + Multipliers3;
     }
 
     // Update is called once per frame
     void Update()
     {
+        if (!menu)
+        {
+            LevelUpdate();
+        }
+    }
+
+    void LevelUpdate()
+    {
         scoreText.text = score.ToString();
-        currectCDAmmo -= Time.deltaTime;
         currentCDMitosis -= Time.deltaTime;
-        MitosisCDSlider.normalizedValue = currentCDMitosis / MitosisCD;
+        MitosisCDSlider.normalizedValue = currentCDMitosis / mitosisCD;
         if (currentCDMitosis <= 0)
         {
             if (!slime.isPlaying) slime.Play();
@@ -79,7 +132,7 @@ public class GameControllerScript : MonoBehaviour
                             Mitosis(i, j);
                         else
                         {
-                            if (CheckAlive(i,j))
+                            if (CheckAlive(i, j))
                             {
                                 Mitosis(i, j);
                                 numCores++;
@@ -89,43 +142,85 @@ public class GameControllerScript : MonoBehaviour
                 }
             }
             if (numCores == 0) Victory();
-            currentCDMitosis = MitosisCD;
-        }
-        if (currectCDAmmo <= 0)
-        {
-            int x = Random.Range(0, horzExtent);
-            int y = Random.Range(0, vertExtent);
-            SpawnAmmo(x, y, true);
-            x = Random.Range(0, horzExtent);
-            y = Random.Range(0, vertExtent);
-            SpawnAmmo(x, y, false);
-            currectCDAmmo = AmmoCD;
+            currentCDMitosis = mitosisCD;
         }
     }
 
+    void GenerateBackground()
+    {
+        var up = GameObject.Find("StenaUp").transform;
+        up.position = new Vector3(0, vertExtent-2);
+        var down = GameObject.Find("StenaDown").transform;
+        down.position = new Vector3(0, -vertExtent-2);
+        var left = GameObject.Find("StenaLeft").transform;
+        left.position = new Vector3(horzExtent+0.5f, 0);
+        var right = GameObject.Find("StenaRight").transform;
+        right.position = new Vector3(-horzExtent-0.5f, 0);
+        for (int i = 0; i < horzExtent+1; i++)
+        {
+            for (int j = 0; j < vertExtent; j++)
+            {
+                GameObject tile;
+                if (Random.value > 0.96)
+                {
+                    tile = Tiles[2];
+                } else
+                {
+                    tile = Random.value > 0.5 ? Tiles[0] : Tiles[1];
+                }
+                var go = Instantiate(tile, new Vector3(-horzExtent + i * 2, -vertExtent-1 + j * 2, 10), Quaternion.identity) as GameObject;
+            }
+        }
+    }
+
+    void GenerateMap()
+    {
+        map = new AlienCellScript[horzExtent][];
+        for (int i = 0; i < horzExtent; i++)
+        {
+            map[i] = new AlienCellScript[vertExtent];
+            for (int j = 0; j < vertExtent; j++)
+            {
+                map[i][j] = null;
+            }
+        }
+
+        for (int i = 0; i < 4; i++)
+        {
+            int x = Random.Range(0, horzExtent);
+            int y = Random.Range(0, vertExtent);
+            SpawnAlien(x, y, 0, 0);
+            map[x][y].SetCore(true);
+            numCores++;
+            Mitosis(x, y);
+        }
+    }
+    
     public void IncreaseScore(bool core)
     {
-        Debug.Log("score " + numCores);
-        score += (core ? CoreValue : CellValue) * numCores;
+        score += (core ? CoreValue : CellValue) * numCores * multiplier;
     }
 
     public void ShowGameMenu(bool end)
     {
-        if (end)
-        {
-            BackButton.GetComponent<Button>().interactable = false;
-        } else
-        {
-            BackButton.GetComponent<Button>().interactable = true;
+        if (GameObject.FindGameObjectWithTag("GameMenu") == null) { 
+            PauseGame(true);
+            var go = Instantiate(GameMenu) as GameObject;
+            go.transform.SetParent(ui.transform, false);
+            if (end)
+            {
+                GameObject.Find("BackButtonT").GetComponent<Button>().interactable = false;
+            } else
+            {
+                GameObject.Find("BackButtonT").GetComponent<Button>().interactable = true;
+            }
         }
-        GameMenu.SetActive(true);
         //GameUI.SetActive(false);
-        PauseGame(true);
     }
 
     public void HideGameMenu()
     {
-        GameMenu.SetActive(false);
+        Destroy(GameObject.FindGameObjectWithTag("GameMenu"));
         //GameUI.SetActive(true);
         PauseGame(false);
     }
@@ -156,26 +251,16 @@ public class GameControllerScript : MonoBehaviour
 
     void Victory()
     {
-        VictoryGO.SetActive(true);
+        var go = Instantiate(VictoryGO) as GameObject;
+        go.transform.SetParent(ui.transform, false);
         ShowGameMenu(true);
     }
 
     public void Defeat()
     {
-        DefeatGO.SetActive(true);
+        var go = Instantiate(DefeatGO) as GameObject;
+        go.transform.SetParent(ui.transform, false);
         ShowGameMenu(true);
-    }
-
-    void SpawnAmmo(int x, int y, bool type)
-    {
-        if (type)
-        {
-            Instantiate(Ammo0, new Vector3(-horzExtent+1 + x * 2, -vertExtent-1 + y * 2, 0), Quaternion.identity);
-        }
-        else
-        {
-            Instantiate(Ammo1, new Vector3(-horzExtent+1 + x * 2, -vertExtent-1 + y * 2, 0), Quaternion.identity);
-        }
     }
 
     bool SpawnAlien(int x, int y, int ox, int oy)
@@ -184,6 +269,7 @@ public class GameControllerScript : MonoBehaviour
         {
             var go = Instantiate(Cell, new Vector3(-horzExtent+1 + x * 2, -vertExtent-1 + y * 2, 0), Quaternion.identity) as GameObject;
             map[x][y] = go.GetComponent<AlienCellScript>();
+            map[x][y].GetComponent<Animator>().speed = 10 / mitosisCD;
             map[x][y].SetCoord(x, y);
             if (Random.value > 0.9)
             {

@@ -38,9 +38,10 @@ public class AlienCellScript : MonoBehaviour {
             }
             GetComponent<Animator>().enabled = true;
             GetComponent<SpriteRenderer>().sprite = CellSprite;
+            GetComponent<SpriteRenderer>().color = Attunement ? new Color(0, 0, 0) : new Color(1, 1, 1);
             //GetComponent<BoxCollider2D>().enabled = true;
-            transform.Find("Attunement").GetComponent<SpriteRenderer>().sprite = Attunement ? OneSprite : ZeroSprite;
-            transform.Find("Attunement").GetComponent<SpriteRenderer>().color = new Color(255, 0, 0, 255);
+            //transform.Find("Attunement").GetComponent<SpriteRenderer>().sprite = Attunement ? OneSprite : ZeroSprite;
+            //transform.Find("Attunement").GetComponent<SpriteRenderer>().color = new Color(255, 0, 0, 255);
             transform.Find("AlienVein2").GetComponent<Animator>().runtimeAnimatorController = CellVeinAnimator;
             transform.Find("AlienVein2").GetComponent<SpriteRenderer>().sprite = CellVeinSprite;
         }
@@ -49,9 +50,10 @@ public class AlienCellScript : MonoBehaviour {
             GetComponent<Animator>().enabled = false;
             mitosisCount = 3;
             GetComponent<SpriteRenderer>().sprite = CoreSprite;
+            GetComponent<SpriteRenderer>().color = new Color(0, 0, 0);
             //GetComponent<BoxCollider2D>().enabled = false;
-            transform.Find("Attunement").GetComponent<SpriteRenderer>().sprite = null;
-            transform.Find("Attunement").GetComponent<SpriteRenderer>().color = new Color(255, 255, 255, 0);
+            //transform.Find("Attunement").GetComponent<SpriteRenderer>().sprite = null;
+            //transform.Find("Attunement").GetComponent<SpriteRenderer>().color = new Color(255, 255, 255, 0);
             transform.Find("AlienVein2").GetComponent<Animator>().runtimeAnimatorController = CoreVeinAnimator;
             transform.Find("AlienVein2").GetComponent<SpriteRenderer>().sprite = CoreVeinSprite;
         }

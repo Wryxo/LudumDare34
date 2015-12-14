@@ -10,6 +10,7 @@ public class PlayerControllerScript : MonoBehaviour {
     public Sprite RightFireSprite;
     public GameObject Blood;
     public GameObject Projectile;
+    public bool Controls;
 
     private Rigidbody2D rb;
     private GameControllerScript gc;
@@ -17,6 +18,7 @@ public class PlayerControllerScript : MonoBehaviour {
     private float currentCD;
     private bool fireLeft;
     private bool fireRight;
+    private bool move;
     public int ammoLeft;
     public int ammoRight;
 
@@ -25,15 +27,19 @@ public class PlayerControllerScript : MonoBehaviour {
         rb = GetComponent<Rigidbody2D>();
         shot = GetComponent<AudioSource>();
         gc = GameObject.FindGameObjectWithTag("GameController").GetComponent<GameControllerScript>();
-        ammoLeft = 5000;
-        ammoRight = 5000;
     }
 
     void Update()
     {
-        if (Input.GetButton("Cancel"))
+        
+        move = false;
+        if (Input.GetButtonDown("Cancel"))
         {
             gc.ShowGameMenu(false);
+        }
+        if (Controls && !move)
+        {
+            rb.velocity = new Vector2(0, 0);
         }
         if (Input.GetButtonDown("Fire1"))
         {
@@ -43,50 +49,69 @@ public class PlayerControllerScript : MonoBehaviour {
         {
             fireRight = true;
         }
-        if (currentCD <= 0)
+        if (Controls && Input.GetButton("Fire1") && Input.GetButton("Fire2"))
         {
-            currentCD = 0;
-            if (fireLeft && ammoLeft > 0)
-            {
-                shot.Play();
-                Shoot(true);
-                fireLeft = false;
-                ammoLeft--;
-                currentCD = GunCD;
-            } else if (fireRight && ammoRight > 0)
-            {
-                shot.Play();
-                Shoot(false);
-                fireRight = false;
-                ammoRight--;
-                currentCD = GunCD;
-            }
+            move = true;
+            fireLeft = false;
+            fireRight = false;
         }
-        currentCD -= Time.deltaTime;
+        if (move)
+        {
+            Vector2 currPos = transform.position;
+            Vector2 swarmPoint = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+            Vector2 direction = (swarmPoint - (Vector2)transform.position).normalized;
+            rb.AddForce(direction * MaxSpeed, ForceMode2D.Impulse);
+            rb.velocity = Vector2.ClampMagnitude(rb.velocity, MaxSpeed);
+        } else
+        {
+            if (currentCD <= 0)
+            {
+                currentCD = 0;
+                if (fireLeft && ammoLeft > 0)
+                {
+                    shot.Play();
+                    Shoot(true);
+                    fireLeft = false;
+                    currentCD = GunCD;
+                }
+                else if (fireRight && ammoRight > 0)
+                {
+                    shot.Play();
+                    Shoot(false);
+                    fireRight = false;
+                    currentCD = GunCD;
+                }
+            }
+            currentCD -= Time.deltaTime;
+        }
     }
 
     void FixedUpdate()
     {
         Vector2 currPos = transform.position;
         Vector2 swarmPoint = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-
-        if (Vector2.Distance(currPos, swarmPoint) > MaxSwarmDistance)
-        {
-            rb.velocity *= 0.95f;
-        }
-
         Vector2 direction = (swarmPoint - (Vector2)transform.position).normalized;
-        rb.AddForce(direction * Acceleration * rb.mass);
-        rb.velocity = Vector2.ClampMagnitude(rb.velocity, MaxSpeed * rb.mass);
-        float angle = Mathf.Atan2(rb.velocity.y, rb.velocity.x) * Mathf.Rad2Deg;
-        var q = Quaternion.AngleAxis(angle-90, Vector3.forward);
+        if (!Controls)
+        {
+
+            if (Vector2.Distance(currPos, swarmPoint) > MaxSwarmDistance)
+            {
+                rb.velocity *= 0.95f;
+            }
+         
+            rb.AddForce(direction * Acceleration);
+            rb.velocity = Vector2.ClampMagnitude(rb.velocity, MaxSpeed);
+        }
+        float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
+        var q = Quaternion.AngleAxis(angle - 90, Vector3.forward);
         transform.rotation = Quaternion.RotateTowards(transform.rotation, q, RotateSpeed);
     }
 
     void Shoot(bool which)
     {
-        var go = Instantiate(Projectile, transform.position + (which ? -transform.right : transform.right)*0.7f, transform.rotation) as GameObject;
-        go.GetComponent<SpriteRenderer>().sprite = which ? LeftFireSprite : RightFireSprite;
+        var go = Instantiate(Projectile, transform.position + (which ? -transform.right : transform.right)*0.3f, transform.rotation) as GameObject;
+        go.GetComponent<SpriteRenderer>().sprite = LeftFireSprite;
+        go.GetComponent<SpriteRenderer>().color = which ? new Color(1, 1, 1) : new Color(0, 0, 0);
         go.GetComponent<ProjectileScript>().Attunement = which ? false : true;
         go.GetComponent<ProjectileScript>().Direction = transform.up;
     }
